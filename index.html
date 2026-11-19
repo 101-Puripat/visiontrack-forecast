@@ -3,251 +3,88 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VisionTrack Forecast</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Thai", sans-serif;
-    }
-  </style>
+  <meta name="description" content="ตรวจจับโต๊ะว่าง King Mongkut's Food Center ดูภาพรวมและสถานะโต๊ะทั้ง 4 โซน" />
+  <meta name="theme-color" content="#ff4612" />
+  <title>VisionTrack Forecast — ตรวจจับโต๊ะว่าง</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <script type="module" src="/app.mjs"></script>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center p-5 md:p-8">
-
-  <div class="w-full max-w-6xl flex flex-col gap-6">
-
-    <!-- Header + Zone Selector Tabs -->
-    <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-800 pb-5">
-      <div>
-        <div class="flex items-center gap-2 mb-1.5">
-          <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-            Live Monitor Demo
-          </span>
-          <span class="text-xs text-slate-500">4 Zones Active</span>
-        </div>
-        <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-white">
-          VisionTrack Forecast
-        </h1>
+<body>
+  <div class="app-shell">
+    <header class="site-header">
+      <div class="brand">
+        <div><h1>VisionTrack Forecast</h1><p class="subtitle">โต๊ะว่าง · King Mongkut's Food Center</p></div>
       </div>
-
-      <!-- Zone Tabs (All, Zone 1, Zone 2, Zone 3, Zone 4) -->
-      <nav aria-label="Zone Selector" class="grid grid-cols-5 sm:flex sm:items-center gap-1 sm:gap-1.5 bg-slate-900 border border-slate-800 p-1.5 rounded-2xl w-full lg:w-auto">
-        <button onclick="selectZone('all')" id="tab-all" class="zone-tab px-2 sm:px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 text-white shadow transition whitespace-nowrap text-center">
-          All
-        </button>
-        <button onclick="selectZone('zone1')" id="tab-zone1" class="zone-tab px-2 sm:px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition whitespace-nowrap text-center">
-          Zone 1
-        </button>
-        <button onclick="selectZone('zone2')" id="tab-zone2" class="zone-tab px-2 sm:px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition whitespace-nowrap text-center">
-          Zone 2
-        </button>
-        <button onclick="selectZone('zone3')" id="tab-zone3" class="zone-tab px-2 sm:px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition whitespace-nowrap text-center">
-          Zone 3
-        </button>
-        <button onclick="selectZone('zone4')" id="tab-zone4" class="zone-tab px-2 sm:px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition whitespace-nowrap text-center">
-          Zone 4
-        </button>
-      </nav>
+      <div class="header-actions">
+        <time class="site-clock" id="site-clock" aria-label="วันและเวลาปัจจุบันในประเทศไทย" aria-live="off">
+          <span id="clock-date" class="clock-date">กำลังโหลดวันที่</span>
+          <span class="clock-time"><span class="clock-label">เวลาปัจจุบัน</span><span id="clock-time">--:--:--</span></span>
+        </time>
+        <button class="button button-secondary" id="scope-open" type="button">ขอบเขตการใช้งาน</button>
+      </div>
     </header>
-
-    <!-- ALL ZONES VIEW (2x2 Grid combining Zone 1, 2, 3, 4) -->
-    <section id="view-all" class="flex flex-col gap-4">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-          <h2 class="text-sm font-semibold text-white">ภาพรวมทุกโซน (All Zones — Zone 1 ถึง Zone 4)</h2>
+    <main>
+      <div class="view-controls">
+      <nav class="zone-nav" aria-label="เลือกมุมมองกล้อง">
+        <button type="button" data-zone="all" aria-current="page" aria-label="มุมมองทั้งหมด"><span class="nav-label-full">มุมมองทั้งหมด</span><span class="nav-label-short" aria-hidden="true">ทั้งหมด</span></button>
+        <button type="button" data-zone="zone1">โซน 1</button>
+        <button type="button" data-zone="zone2">โซน 2</button>
+        <button type="button" data-zone="zone3">โซน 3</button>
+        <button type="button" data-zone="zone4">โซน 4</button>
+      </nav>
+      </div>
+      <section class="dashboard" aria-labelledby="dashboard-title">
+        <div class="section-heading">
+          <h2 id="dashboard-title">ภาพรวมทั้ง 4 โซน</h2>
+          <span class="data-status" id="data-status" role="status">กำลังโหลดข้อมูล</span>
         </div>
-      </div>
-
-      <div id="all-zones-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- 4 Zone Cards populated by JS -->
-      </div>
-    </section>
-
-    <!-- SINGLE ZONE VIEW (Zone 1 / 2 / 3 / 4 Full View) -->
-    <section id="view-single" class="hidden flex flex-col gap-4">
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-        <!-- Single Video Stage -->
-        <div class="relative bg-black aspect-video w-full flex items-center justify-center">
-          <div class="absolute top-3 right-3 z-10 px-3 py-1 rounded-lg bg-black/75 border border-white/10 text-xs font-semibold text-white flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span id="single-zone-badge">Zone 1</span>
-          </div>
-
-          <div id="single-empty" class="hidden flex flex-col items-center justify-center text-center p-8 text-slate-400 gap-2">
-            <div class="text-4xl">📹</div>
-            <div class="text-base font-semibold text-slate-200" id="single-empty-title">รอไฟล์วิดีโอสำหรับ Zone 1</div>
-            <p class="text-xs text-slate-400">
-              เมื่อนำไฟล์ <code id="single-expected-file" class="bg-slate-800 px-1.5 py-0.5 rounded text-indigo-300">zone1.mp4</code> มาวางในโฟลเดอร์ <code class="bg-slate-800 px-1.5 py-0.5 rounded text-emerald-300">videos/</code> คลิปจะแสดงตรงนี้โดยอัตโนมัติ
-            </p>
-          </div>
-
-          <video id="single-video" class="hidden w-full h-full object-contain pointer-events-none" autoplay muted playsinline loop></video>
+        <div class="stats-grid" aria-label="สรุปจำนวนโต๊ะ">
+          <article class="stat-card stat-free">
+            <div class="free-heading"><h3 class="stat-label">โต๊ะว่าง</h3><span class="coverage-badge" id="count-coverage">กำลังตรวจสอบข้อมูล</span></div>
+            <div class="stat-value"><strong id="stat-free">—</strong><span>โต๊ะ</span></div>
+            <div class="availability-label"><span>สัดส่วนโต๊ะว่าง</span><strong id="free-percent">—</strong></div>
+            <div class="availability-track" role="progressbar" aria-label="สัดส่วนโต๊ะว่าง" aria-valuemin="0" aria-valuemax="100" id="availability-bar"><div id="availability-fill"></div></div>
+          </article>
+          <article class="stat-card stat-occupied"><h3 class="stat-label">โต๊ะไม่ว่าง</h3><div class="stat-value"><strong id="stat-occupied">—</strong><span>โต๊ะ</span></div></article>
+          <article class="stat-card stat-total"><h3 class="stat-label">โต๊ะที่ตรวจจับได้</h3><div class="stat-value"><strong id="stat-total">—</strong><span>โต๊ะ</span></div></article>
         </div>
-
-        <!-- Single Zone Info Bar -->
-        <div class="px-5 py-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <div class="text-xs text-slate-400">พื้นที่ที่กำลังแสดงผล</div>
-            <div id="single-zone-title" class="text-base font-bold text-white">Zone 1 — โซนโต๊ะและเก้าอี้โรงอาหาร</div>
-          </div>
-
-          <button onclick="selectZone('all')" class="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-white transition">
-            ⊞ กลับไปดูรวมทุกโซน (All)
-          </button>
+      </section>
+      <section class="camera-section" aria-labelledby="camera-title">
+        <div class="section-heading camera-heading">
+          <h2 id="camera-title">มุมกล้องทั้งหมด</h2>
         </div>
-      </div>
-    </section>
-
-    <!-- Project Info Cards -->
-    <section class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
-      <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-4">
-        <div class="text-xs text-slate-400 mb-1">ขอบเขตการตรวจจับ (Detection Target)</div>
-        <div class="text-sm font-semibold text-white">โต๊ะ เก้าอี้ และความหนาแน่นของผู้ใช้งาน</div>
-        <p class="text-xs text-slate-400 mt-1">ประเมินความหนาแน่นภายในโรงอาหารจากการตรวจจับโต๊ะและเก้าอี้ที่มีผู้ใช้งาน</p>
-      </div>
-      <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-4">
-        <div class="text-xs text-slate-400 mb-1">การแบ่งพื้นที่ (Area Coverage)</div>
-        <div class="text-sm font-semibold text-white">แบ่งพื้นที่โรงอาหารออกเป็น 4 โซน</div>
-        <p class="text-xs text-slate-400 mt-1">สามารถดูภาพรวมพร้อมกันทั้ง 4 โซน (All) หรือเลือกเจาะจงดูทีละโซนได้</p>
-      </div>
-      <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-4">
-        <div class="text-xs text-slate-400 mb-1">ระบบประมวลผล (AI Pipeline)</div>
-        <div class="text-sm font-semibold text-white">Roboflow Object Detection Workflow</div>
-        <p class="text-xs text-slate-400 mt-1">แสดงผลวิดีโอที่ผ่านการประมวลผลและตีกรอบจากโมเดลเรียบร้อยแล้ว</p>
-      </div>
-    </section>
-
+        <p class="error-message" id="app-error" role="alert" hidden></p>
+        <div class="camera-grid" id="camera-grid" aria-busy="true"><p class="loading-message">กำลังโหลดกล้อง…</p></div>
+      </section>
+    </main>
+    <footer>จำนวนโต๊ะรวมเฉพาะโซนที่มีข้อมูล</footer>
   </div>
-
-  <script>
-    let zonesData = [
-      { id: "zone1", number: 1, label: "Zone 1", videoUrl: null },
-      { id: "zone2", number: 2, label: "Zone 2", videoUrl: null },
-      { id: "zone3", number: 3, label: "Zone 3", videoUrl: null },
-      { id: "zone4", number: 4, label: "Zone 4", videoUrl: null },
-    ];
-    let activeTab = "all";
-
-    async function fetchZones() {
-      try {
-        const res = await fetch("/api/zones");
-        const data = await res.json();
-        if (Array.isArray(data.zones)) {
-          zonesData = data.zones;
-        }
-      } catch (e) {
-        console.error("Failed to fetch zones:", e);
-      }
-      renderAllGrid();
-      selectZone(activeTab);
-    }
-
-    function renderAllGrid() {
-      const grid = document.getElementById("all-zones-grid");
-      grid.innerHTML = zonesData
-        .map((z) => {
-          const hasVideo = Boolean(z.videoUrl);
-          return `
-            <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg flex flex-col">
-              <div class="relative bg-black aspect-video w-full flex items-center justify-center group">
-                <div class="absolute top-2.5 right-2.5 z-10 px-2.5 py-1 rounded-lg bg-black/75 border border-white/10 text-xs font-semibold text-white flex items-center gap-1.5">
-                  <span class="w-2 h-2 rounded-full ${hasVideo ? "bg-emerald-400" : "bg-amber-400"}"></span>
-                  ${z.label}
-                </div>
-
-                ${
-                  hasVideo
-                    ? `<video class="all-zone-video w-full h-full object-contain pointer-events-none" src="${z.videoUrl}" autoplay muted playsinline loop></video>`
-                    : `<div class="flex flex-col items-center justify-center text-center p-6 text-slate-500 gap-1.5">
-                        <span class="text-2xl">📹</span>
-                        <span class="text-xs font-medium text-slate-300">รอไฟล์คลิป ${z.label}</span>
-                        <span class="text-xs text-slate-500">ไฟล์: <code class="bg-slate-800 px-1.5 py-0.5 rounded text-indigo-300">zone${z.number}.mp4</code></span>
-                      </div>`
-                }
-              </div>
-
-              <div class="px-4 py-2.5 border-t border-slate-800 flex items-center justify-between text-xs">
-                <span class="font-semibold text-slate-200">${z.label}</span>
-                <button onclick="selectZone('${z.id}')" class="px-2.5 py-1 rounded-lg bg-indigo-600/90 hover:bg-indigo-500 text-xs font-medium text-white transition">
-                  ขยายดู ↗
-                </button>
-              </div>
-            </div>
-          `;
-        })
-        .join("");
-    }
-
-    function selectZone(tabId) {
-      activeTab = tabId;
-
-      // Update Tab Buttons styling
-      document.querySelectorAll(".zone-tab").forEach((btn) => {
-        const isCurrent = btn.id === "tab-" + tabId;
-        btn.className = isCurrent
-          ? "zone-tab px-2 sm:px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 text-white shadow transition whitespace-nowrap text-center"
-          : "zone-tab px-2 sm:px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition whitespace-nowrap text-center";
-      });
-
-      const viewAll = document.getElementById("view-all");
-      const viewSingle = document.getElementById("view-single");
-      const singleVideo = document.getElementById("single-video");
-      const singleEmpty = document.getElementById("single-empty");
-
-      if (tabId === "all") {
-        singleVideo.pause();
-        viewSingle.classList.add("hidden");
-        viewAll.classList.remove("hidden");
-        controlAllVideos("play");
-        return;
-      }
-
-      // Pause grid videos when viewing single zone
-      controlAllVideos("pause");
-      viewAll.classList.add("hidden");
-      viewSingle.classList.remove("hidden");
-
-      const zone = zonesData.find((z) => z.id === tabId);
-      if (!zone) return;
-
-      document.getElementById("single-zone-badge").textContent = zone.label;
-      document.getElementById("single-zone-title").textContent = zone.label;
-
-      if (zone.videoUrl) {
-        singleEmpty.classList.add("hidden");
-        singleVideo.classList.remove("hidden");
-        if (!singleVideo.src.endsWith(zone.videoUrl)) {
-          singleVideo.src = zone.videoUrl;
-        }
-        singleVideo.play().catch(() => {});
-      } else {
-        singleVideo.pause();
-        singleVideo.classList.add("hidden");
-        singleEmpty.classList.remove("hidden");
-        document.getElementById("single-empty-title").textContent = `รอไฟล์วิดีโอสำหรับ ${zone.label}`;
-        document.getElementById("single-expected-file").textContent = `zone${zone.number}.mp4`;
-      }
-    }
-
-    function controlAllVideos(action) {
-      document.querySelectorAll(".all-zone-video").forEach((v) => {
-        if (action === "play") v.play().catch(() => {});
-        else v.pause();
-      });
-    }
-
-    function setSingleSpeed(rate) {
-      const singleVideo = document.getElementById("single-video");
-      singleVideo.playbackRate = rate;
-      document.querySelectorAll(".speed-btn").forEach((btn) => {
-        const isSelected = Number(btn.dataset.speed) === rate;
-        btn.className = isSelected
-          ? "speed-btn px-2 py-1 rounded text-xs font-medium bg-indigo-600 text-white"
-          : "speed-btn px-2 py-1 rounded text-xs font-medium text-slate-400 hover:text-white";
-      });
-    }
-
-    fetchZones();
-  </script>
+  <dialog id="scope-dialog" aria-labelledby="scope-title" aria-describedby="scope-description">
+    <form method="dialog" class="scope-content">
+      <header class="scope-header">
+        <div>
+          <h2 id="scope-title">ขอบเขตการใช้งาน</h2>
+        </div>
+        <button class="scope-close" id="scope-close" type="submit" value="close" aria-label="ปิดขอบเขตการใช้งาน">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
+        </button>
+      </header>
+      <div class="scope-body" tabindex="0" role="region" aria-label="รายละเอียดขอบเขตการใช้งาน">
+        <p id="scope-description" class="scope-intro">ตรวจสอบโต๊ะว่างภายใน King Mongkut's Food Center (KFC)</p>
+        <section class="scope-area" aria-labelledby="scope-zones-title">
+          <h3 id="scope-zones-title">แบ่งพื้นที่เป็น 4 โซน</h3>
+          <p>มองจากทางเข้า เรียงจากซ้ายไปขวาตามช่วงเสา</p>
+          <ol class="scope-zones" aria-label="ตำแหน่งโซนจากซ้ายไปขวาเมื่อมองจากทางเข้า">
+            <li>โซน 1</li><li>โซน 2</li><li>โซน 3</li><li>โซน 4</li>
+          </ol>
+        </section>
+        <section class="scope-coverage" aria-labelledby="scope-coverage-title">
+          <div class="scope-metric"><span>มากกว่า</span><strong>70%</strong></div>
+          <div><h3 id="scope-coverage-title">ของพื้นที่โรงอาหาร</h3><p>จำนวนโต๊ะที่แสดงครอบคลุมเฉพาะพื้นที่ในมุมกล้อง</p></div>
+        </section>
+      </div>
+      <div class="scope-footer"><button class="button button-primary" id="scope-confirm" type="submit" value="confirm" autofocus>เข้าใจแล้ว</button></div>
+    </form>
+  </dialog>
 </body>
 </html>

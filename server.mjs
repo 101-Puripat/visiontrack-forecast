@@ -2,6 +2,8 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
+import { validateTrack } from "./counts.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const VIDEOS_DIR = path.join(__dirname, "videos");
@@ -18,27 +20,25 @@ const MIME_TYPES = {
   ".ogg": "video/ogg",
 };
 
-const EXTENSIONS = Object.keys(MIME_TYPES);
-
 function sendJson(res, status, data) {
   res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
   res.end(JSON.stringify(data));
 }
 
-function findZoneVideo(zoneNum) {
-  const files = fs.readdirSync(VIDEOS_DIR);
-  const patterns = [
-    new RegExp(`^zone[_\\s-]?${zoneNum}\\.`, "i"),
-    new RegExp(`^z${zoneNum}\\.`, "i"),
-    new RegExp(`^${zoneNum}\\.`, "i"),
-  ];
-  for (const pat of patterns) {
-    const match = files.find(
-      (f) => pat.test(f) && EXTENSIONS.includes(path.extname(f).toLowerCase())
-    );
-    if (match) return match;
+function findZoneVideo(number) {
+  const pattern = new RegExp(`^zone${number}\\.(mp4|webm|mov|ogg)$`, "i");
+  return fs.readdirSync(VIDEOS_DIR).find(file => pattern.test(file) && fs.statSync(path.join(VIDEOS_DIR, file)).isFile()) || null;
+}
+
+function matchingCountTrack(number, videoFile = findZoneVideo(number)) {
+  if (!videoFile) return null;
+  try {
+    const track = JSON.parse(fs.readFileSync(path.join(__dirname, `data/zone${number}.counts.json`), "utf8"));
+    const digest = createHash("sha256").update(fs.readFileSync(path.join(VIDEOS_DIR, videoFile))).digest("hex");
+    return validateTrack(track) && track.videoSha256 === digest ? track : null;
+  } catch {
+    return null;
   }
-  return null;
 }
 
 function streamVideo(req, res, filePath) {
@@ -49,9 +49,16 @@ function streamVideo(req, res, filePath) {
   const range = req.headers.range;
 
   if (range) {
-    const [startStr, endStr] = range.replace(/bytes=/, "").split("-");
-    const start = parseInt(startStr, 10);
-    const end = endStr ? parseInt(endStr, 10) : fileSize - 1;
+    const match = /^bytes=(\d*)-(\d*)$/.exec(range);
+    let start = match?.[1] ? Number(match[1]) : 0;
+    let end = match?.[2] ? Number(match[2]) : fileSize - 1;
+    if (match && !match[1] && match[2]) { start = Math.max(0, fileSize - Number(match[2])); end = fileSize - 1; }
+    end = Math.min(end, fileSize - 1);
+    if (!match || (!match[1] && !match[2]) || !Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 0 || start > end || start >= fileSize) {
+      res.writeHead(416, { "Content-Range": `bytes */${fileSize}` });
+      res.end();
+      return;
+    }
     const chunkSize = end - start + 1;
 
     res.writeHead(206, {
@@ -60,14 +67,20 @@ function streamVideo(req, res, filePath) {
       "Content-Length": chunkSize,
       "Content-Type": contentType,
     });
-    fs.createReadStream(filePath, { start, end }).pipe(res);
+    const stream = fs.createReadStream(filePath, { start, end });
+    stream.on("error", () => res.destroy());
+    res.on("close", () => stream.destroy());
+    stream.pipe(res);
   } else {
     res.writeHead(200, {
       "Content-Length": fileSize,
       "Content-Type": contentType,
       "Accept-Ranges": "bytes",
     });
-    fs.createReadStream(filePath).pipe(res);
+    const stream = fs.createReadStream(filePath);
+    stream.on("error", () => res.destroy());
+    res.on("close", () => stream.destroy());
+    stream.pipe(res);
   }
 }
 
@@ -84,23 +97,41 @@ const server = http.createServer((req, res) => {
   if (req.method === "GET" && url.pathname === "/api/zones") {
     const zones = [1, 2, 3, 4].map((num) => {
       const file = findZoneVideo(num);
+      const track = matchingCountTrack(num, file);
       return {
         id: `zone${num}`,
         number: num,
         label: `Zone ${num}`,
         fileName: file,
         videoUrl: file ? `/videos/${encodeURIComponent(file)}` : null,
+        countsUrl: track ? `/data/zone${num}.counts.json` : null,
       };
     });
     sendJson(res, 200, { zones });
     return;
   }
 
+  const countRequest = /^\/data\/zone([1-4])\.counts\.json$/.exec(url.pathname);
+  if (req.method === "GET" && countRequest) {
+    const track = matchingCountTrack(Number(countRequest[1]));
+    sendJson(res, track ? 200 : 404, track || { error: "No count data matching the current video" });
+    return;
+  }
+
+  const staticAssets = { "/app.mjs": "text/javascript", "/counts.mjs": "text/javascript", "/styles.css": "text/css" };
+  if (req.method === "GET" && Object.hasOwn(staticAssets, url.pathname)) {
+    res.writeHead(200, { "Content-Type": `${staticAssets[url.pathname]}; charset=utf-8` });
+    res.end(fs.readFileSync(path.join(__dirname, url.pathname.slice(1))));
+    return;
+  }
+
   if (req.method === "GET" && url.pathname.startsWith("/videos/")) {
-    const fileName = decodeURIComponent(url.pathname.slice("/videos/".length));
+    let fileName;
+    try { fileName = decodeURIComponent(url.pathname.slice("/videos/".length)); }
+    catch { res.writeHead(400); res.end("Invalid video path"); return; }
     const safeName = path.basename(fileName);
     const filePath = path.join(VIDEOS_DIR, safeName);
-    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+    if (/^zone[1-4]\.(mp4|webm|mov|ogg)$/i.test(safeName) && fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
       streamVideo(req, res, filePath);
       return;
     }
@@ -111,6 +142,6 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`\nCafeteria 4-Zone Density Demo running at http://localhost:${PORT}`);
-  console.log(`Videos folder: ${VIDEOS_DIR} (zone1.mp4 .. zone4.mp4)\n`);
+  console.log(`\nVisionTrack Forecast running at http://localhost:${PORT}`);
+  console.log(`Videos folder: ${VIDEOS_DIR} (one video per matching zone)\n`);
 });

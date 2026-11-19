@@ -1,0 +1,51 @@
+{
+  "sourceVideo": "videos/zone4.mp4",
+  "videoSha256": "981e82f31ad24504c885ea64c3331b3fe3b911581fc55e579179e04b472827a8",
+  "durationSeconds": 7.556156,
+  "source": "burned-in Empty / Occupied overlay at the top left of the video",
+  "method": "Visually verified overlay observations sampled every second. The first observation at 0.1 seconds initializes the timeline at 0. No live inference or random data.",
+  "sampleIntervalSeconds": 1,
+  "samples": [
+    {
+      "time": 0,
+      "free": 9,
+      "occupied": 22
+    },
+    {
+      "time": 1,
+      "free": 9,
+      "occupied": 21
+    },
+    {
+      "time": 2,
+      "free": 9,
+      "occupied": 21
+    },
+    {
+      "time": 3,
+      "free": 10,
+      "occupied": 21
+    },
+    {
+      "time": 4,
+      "free": 11,
+      "occupied": 21
+    },
+    {
+      "time": 5,
+      "free": 11,
+      "occupied": 20
+    },
+    {
+      "time": 6,
+      "free": 11,
+      "occupied": 21
+    },
+    {
+      "time": 7,
+      "free": 10,
+      "occupied": 21
+    }
+  ],
+  "sourceVideoSha256": "3fc100012bdbbb7bceedfd319958d4e025cf15917a37ed237dd3c4f62f2a472f"
+}

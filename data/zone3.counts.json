@@ -1,0 +1,166 @@
+{
+  "sourceVideo": "videos/zone3.mp4",
+  "videoSha256": "1a5b7070fb84feef79918acea5d3d3b71a0c7ec9a9cd0b6dab6d939c7dbb92ab",
+  "durationSeconds": 30.286856,
+  "source": "burned-in Empty / Occupied overlay at the top left of the video",
+  "method": "Visually verified overlay observations sampled every second. The first observation at 0.1 seconds initializes the timeline at 0. No live inference or random data.",
+  "sampleIntervalSeconds": 1,
+  "samples": [
+    {
+      "time": 0,
+      "free": 18,
+      "occupied": 18
+    },
+    {
+      "time": 1,
+      "free": 19,
+      "occupied": 18
+    },
+    {
+      "time": 2,
+      "free": 19,
+      "occupied": 16
+    },
+    {
+      "time": 3,
+      "free": 18,
+      "occupied": 17
+    },
+    {
+      "time": 4,
+      "free": 19,
+      "occupied": 18
+    },
+    {
+      "time": 5,
+      "free": 18,
+      "occupied": 19
+    },
+    {
+      "time": 6,
+      "free": 18,
+      "occupied": 19
+    },
+    {
+      "time": 7,
+      "free": 17,
+      "occupied": 18
+    },
+    {
+      "time": 8,
+      "free": 14,
+      "occupied": 23
+    },
+    {
+      "time": 9,
+      "free": 15,
+      "occupied": 21
+    },
+    {
+      "time": 10,
+      "free": 16,
+      "occupied": 18
+    },
+    {
+      "time": 11,
+      "free": 18,
+      "occupied": 16
+    },
+    {
+      "time": 12,
+      "free": 18,
+      "occupied": 16
+    },
+    {
+      "time": 13,
+      "free": 16,
+      "occupied": 20
+    },
+    {
+      "time": 14,
+      "free": 18,
+      "occupied": 19
+    },
+    {
+      "time": 15,
+      "free": 16,
+      "occupied": 18
+    },
+    {
+      "time": 16,
+      "free": 16,
+      "occupied": 18
+    },
+    {
+      "time": 17,
+      "free": 16,
+      "occupied": 19
+    },
+    {
+      "time": 18,
+      "free": 18,
+      "occupied": 18
+    },
+    {
+      "time": 19,
+      "free": 17,
+      "occupied": 19
+    },
+    {
+      "time": 20,
+      "free": 17,
+      "occupied": 19
+    },
+    {
+      "time": 21,
+      "free": 17,
+      "occupied": 19
+    },
+    {
+      "time": 22,
+      "free": 16,
+      "occupied": 21
+    },
+    {
+      "time": 23,
+      "free": 15,
+      "occupied": 20
+    },
+    {
+      "time": 24,
+      "free": 16,
+      "occupied": 19
+    },
+    {
+      "time": 25,
+      "free": 17,
+      "occupied": 21
+    },
+    {
+      "time": 26,
+      "free": 16,
+      "occupied": 18
+    },
+    {
+      "time": 27,
+      "free": 17,
+      "occupied": 17
+    },
+    {
+      "time": 28,
+      "free": 18,
+      "occupied": 17
+    },
+    {
+      "time": 29,
+      "free": 17,
+      "occupied": 17
+    },
+    {
+      "time": 30,
+      "free": 17,
+      "occupied": 16
+    }
+  ],
+  "sourceVideoSha256": "390b63c2e5c59fb9156011226d9cade95e00af26b98b82239dddaf4501df9257"
+}
